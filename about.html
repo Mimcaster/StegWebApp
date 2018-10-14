@@ -10,6 +10,9 @@
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="starter-template.css" rel="stylesheet">
     <link href="css/mystyle.css" rel="stylesheet">
 
   </head>
@@ -24,40 +27,26 @@
 
       <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="#">Encryption <span class="sr-only">(current)</span></a>
+          <li class="nav-item active">
+            <a class="nav-link" href="index.html">Encryption <span class="sr-only">(current)</span></a>
           </li>
           <li class="nav-item active">
             <a class="nav-link" href="decryption.html">Decryption</a>
           </li>
-          <li class="nav-item active">
-            <a class="nav-link" href="about.html">About Us</a>
+          <li class="nav-item">
+            <a class="nav-link" href="#">About Us</a>
           </li>
 
         </ul>
       </div>
     </nav>
+    <br><br><br><br><br>
+    <main role="main" class="container">
 
-    <main class="container">
-      <br><br><br><br><br>
-      <!--EncryptionSubmissionView-->
-      <form id="EncryptionSubmissionView" class="starter-template">
-        <h1>Stegosaurus Encryption</h1>
-        <p>Upload the file you want to hide in the image</p>
-        <input type="file" id=inputfile name="inputfile" ></input>
-        <p class="lead">You can upload a link to a picture you want to use for encrytion, or the image itself.</p>
-        <div style="text-align:center"><input type="text" name="inputLinkText" id="inputLink" class="form-control" style="display:inline-block;" placeholder="Enter image link here"></div>
-        <p>Type in the password you want to use to get the file out of the image later</p>
-        <input type="password" name="password" id="inputPassword" class="form-control" style="display:inline-block;" placeholder="Enter encryption password here">
-        <br>
-        <button class="btn btn-lg btn-primary btn-block" type="submit" style="margin:2%; background-color: #517664; border-color:#517664; display:inline-block;">Enter Data</button>
-      </form>
-      <!--EncryptedOutputView-->
-      <form id="EncryptedOutputView" class="starter-template">
-        <h1>Encrypted Image</h1>
-        <img id="outputfile" src="images/Hacker1.jpg"> <!--Placeholder image-->
-        <p id="outputlink">Placeholder link</p>    <!--Where the link goes-->
-      </form>
+      <div class="starter-template">
+        <h1>Bootstrap starter template</h1>
+        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+      </div>
 
     </main><!-- /.container -->
 

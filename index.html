@@ -66,15 +66,19 @@
       <!--EncryptionSubmissionView-->
       <form id="EncryptionSubmissionView">
         <h1>Stegosaurus Encryption</h1>
-        <p class="lead">You can upload a link to a picture you want to use for encrytion, or the image itself.</p>
 
         <p>Upload the file you want to hide in the image</p>
-        <input type="file" id=inputfile name="inputfile" ></input>
+        <input type="file" id="inputfile" name="inputfile" ></input>
+        <br><br><br>
+        <!--<p class="lead">You can upload a link to a picture you want to use for encrytion, or the image itself.</p>-->
+        <p>Upload the image you want to hide the file in</p>
+        <input type="file" id="inputimagefile" name="inputfile" ></input>
+
         <p>Or</p>
         <div style="text-align:center"><input type="text" name="inputLinkText" id="inputLink" class="form-control" style="display:inline-block;" placeholder="Enter image link here"></div>
 
-
-        <p class="lead">You could also choose a default image instead.</p>
+        <p>Or</p>
+        <p class="lead">Choose one of these default images.</p>
         <div id="DefaultImageSelector">
           <div class="defaultChoice">
               <input type="radio" id="defaultImage1" class="defaultImage" name="defaultImage" value="1">
@@ -96,7 +100,7 @@
             <label class="defaultImageLabel" for="defaultImage4"><img src="images/default4.jpg"></img></label>
           </div>
         </div>
-
+        <br><br><br>
         <p>Type in the password you want to use to get the file out of the image later</p>
         <input type="password" name="password" id="inputPassword" class="form-control" style="display:inline-block;" placeholder="Enter encryption password here">
         <br>

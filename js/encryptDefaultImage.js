@@ -1,4 +1,4 @@
-function takeInput(imageFile, dataToBeEncrypted, encryptionKey)
+function takeDefaultFileInput(defaultNum, dataToBeEncrypted, encryptionKey)
 {
 /*Take the input sent from the web page.
 Generate 2 keys.
@@ -32,7 +32,7 @@ Send a second key to the connection to the steg server along with the rest of th
       dataToBeEncrypted = reader.result;
 
       console.log(typeof(dataToBeEncrypted) + "size: " + dataToBeEncrypted.length);
-      console.log(dataToBeEncrypted);
+
       aesEncrypt(fileName);
     }
   }
@@ -127,70 +127,7 @@ Send a second key to the connection to the steg server along with the rest of th
   var encryptedFile = aesCbc.encrypt(textBytes);
   //var encryptedHex = aesjs.util.hex.fromBytes(encryptedFile);
   //alert(encryptedHex);
-  function checkValidImageFile(imageFile, encryptedData)
-  {
-    var form_data = new FormData();         //Inserts the image file into a data form so it can be processed by steg server
-    form_data.append("image", imageFile);
 
-
-    var imageextension = imageFile.name.split('.').pop().toLowerCase();
-
-    console.log("extension " + imageextension + " file name " + imageFile.name);
-
-
-    if($.inArray(imageextension, ["png", "bmp", "jpg"]) == -1)
-    {
-      alert("Not valid image file");
-      return false;
-    }
-    var capacity = 0; //variable that stores the capacity of the image file
-
-    $.ajax(
-    {
-    async:false,
-    contentType:false,
-    cache: false,
-    processData: false,
-    method: "POST",
-    data: form_data,
-    url:"php/getcapacity.php",
-    success: function(data)
-      {
-        //console.log("testsetst");
-        console.log(data);
-        capacity = parseInt(data.substring(1, data.length - 1));
-        if(capacity > encryptedData.size)
-        {
-          alert("Image is large enough to hold encrypted data");
-          setTrue();
-        }
-        else
-        {
-          alert("Image is too small to hold the file, capacity: " + capacity + " Size: " + encryptedData.size);
-          setFalse();
-        }
-      },
-    error: function()
-      {
-        console.log("Error using ima ge");
-        setFalse();
-      }
-    });
-
-    var returnValue;
-    function setTrue()
-    {
-      returnValue = true;
-    }
-    function setFalse()
-    {
-      returnValue = false;
-    }
-    alert("Value" + returnValue);
-    return returnValue;
-
-
-  }
   var encryptedString = "";
   for(var i = 0; i < encryptedFile.length; i++)
   {
@@ -209,25 +146,23 @@ Send a second key to the connection to the steg server along with the rest of th
 
   //var stringIv = aesjs.utils.utf8.fromBytes(iv);
 
-  //var downloadableFile = new Blob([btoa(stringIv) + btoa(encryptedString)], {type: "text/plain;charset=utf-8"});
-  //saveAs(downloadableFile, encryptedFileName);
+  var downloadableFile = new Blob([btoa(stringIv) + btoa(encryptedString)], {type: "text/plain;charset=utf-8"});
+  saveAs(downloadableFile, encryptedFileName);
 
 
-  if(checkValidImageFile(imageFile, downloadableFile) == true)
+  var form_data = new FormData();         //Inserts the image file into a data form so it can be processed by steg server
+  //form_data.append("image", imageFile);
+  form_data.append("content", downloadableFile);
+
+  $.ajax(
   {
-    var form_data = new FormData();         //Inserts the image file into a data form so it can be processed by steg server
-    form_data.append("image", imageFile);
-    form_data.append("content", downloadableFile);
-
-    $.ajax(
-    {
     async:false,
     contentType:false,
     cache: false,
     processData: false,
     method: "POST",
     data:form_data,
-    url:"php/encryptdata.php?key=" + serverKey,
+    url:"php/encryptDefaultImage.php?key=" + serverKey + "&default=" + defaultNum,
     success: function(data)
       {
         alert(data);
@@ -238,12 +173,8 @@ Send a second key to the connection to the steg server along with the rest of th
       {
         alert("Insert error");
       }
-    });
-  }
-  else
-  {
-    alert("You must insert a valid image file");
-  }
+  });
+
 
   var newAesCbc = new aesjs.ModeOfOperation.cbc(clientKey, iv);
 

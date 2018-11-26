@@ -1,32 +1,32 @@
 <?php
 $ch = curl_init();
 
-curl_setopt($ch,  CURLOPT_URL, "https://stegosaurus.ml/api/extract?key=" . $_GET["key"]);
+curl_setopt($ch,  CURLOPT_URL, "https://stegosaurus.ml/api/get_capacity?formatted=false");
 
 //calling stegosaurus.ml/getcapacity
 //input: image   type: file
-
 $imagefile = new CURLFile($_FILES['image']['tmp_name'], $_FILES['image']['type'], $_FILES['image']['name']);
 
 $postfields = array(
-  "image" => $imagefile,
+  "image" => $imagefile
 );
 
 curl_setopt($ch, CURLOPT_POST, 1);      //Declaring that this is a post call
 curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);    //Passing in the post fields
 
 
-$extractedfile = curl_exec($ch);
+$capacity = curl_exec($ch);
 
-if($extractedfile === FALSE)
+  if($capacity === FALSE)   //Checks out if anything went wrong
 {
-  echo "ERROR: " . curl_error($ch);
+  echo "Error: " + curl_error($ch);
+
 }
 else
 {
-  echo $extractedfile;
+  echo $capacity;
 }
 
-
 curl_close($ch);
+
 ?>

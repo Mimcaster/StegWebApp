@@ -24,8 +24,36 @@
           $("#SubmissionButton").click(function()
           {										//Puts the user in the EncryptedOutputView after they submit data
 
-                $("#DecryptionSubmissionView").hide();
-                $("#DecryptedOutputView").show();
+            var inputpassword = $("input[name='password']").val();
+            var inputfile = document.getElementById("inputFile").files[0];
+            var inputlink = $("input[name='inputLinkText']").val();
+
+            if(typeof(inputfile) == "undefined" && inputlink.length == 0)
+            {
+                alert("Need to upload an image file with embedded data");
+            }
+            else if(inputpassword.length == 0)
+            {
+                alert("Need a password");
+            }
+            else
+            {
+              setPassword(inputpassword);
+              if(typeof(inputfile) != "undefined")
+              { //this will be replaces with code for sending the image file to php
+                clientSideDecryption(inputfile);
+              }
+              else
+              {
+                clientSideDecryption(inputlink);
+              }
+
+
+
+              $("#DecryptionSubmissionView").hide();
+              $("#DecryptedOutputView").show();
+            }
+
 
           });
 
@@ -69,7 +97,7 @@
             <p class="lead">You can upload a link to a picture you want to use for decrytion, or the image itself.</p>
 
             <p>Upload the image file you want to extract data from</p>
-            <input type="file" id=inputfile name="inputFile" ></input>
+            <input type="file" id="inputFile" name="inputFile" ></input>
             <p>Or</p>
             <div style="text-align:center"><input type="text" name="inputLinkText" id="inputLink" class="form-control" style="display:inline-block;" placeholder="Image Link"></div>
             <br><br><br><br><br>
@@ -81,7 +109,7 @@
           <!--DecryptedOutputView-->
           <form id="DecryptedOutputView" class="starter-template">
             <h1>Decrypted File</h1>
-            <a id="decryptedoutputlink" href=#>Download link</a> <br>
+            <p>Downloading...</p> <br>
             <button id="SubmitAgain" class="btn btn-lg btn-primary btn-block" type="button" style="margin:2%; background-color: #517664; border-color:#517664; display:inline-block;">Go Back</button>
 
           </form>
@@ -91,11 +119,15 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
     <script src="css/bootstrap-4.1.3-dist/popper.min.js"></script>
     <script src="css/bootstrap-4.1.3-dist/js/bootstrap.min.js"></script>
+    <script src="js/decryption.js"></script>
     <script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
+    <script type="text/javascript" src="library/sjcl.js"></script>
+    <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
 
     <script>
       function takeDecryptionOutput(decryptedFile)

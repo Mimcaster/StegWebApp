@@ -11,40 +11,43 @@ Send a second key to the connection to the steg server along with the rest of th
     Hash encryptionKey + bits 128-255 with SHA256 again: This is the client side key
   */
 
-  console.log("hue" + typeof(dataToBeEncrypted));
 
-  alert("why wonttdts you work");
-
-
+  //If text is being encrypted
   if(typeof(dataToBeEncrypted) == "string")
   {
-    aesEncrypt("cipherText.txt");
-  }
+    dataToBeEncrypted = aesjs.utils.utf8.toBytes(dataToBeEncrypted);   //Converts the string to an array of bytes
+
+    aesEncrypt("cipherText.txt"); //Encrypts it
+  } //If a file is being encrypted
   else if(dataToBeEncrypted.constructor.name == "File")
   {
     var reader = new FileReader();
-    reader.readAsText(dataToBeEncrypted);
+    reader.readAsArrayBuffer(dataToBeEncrypted);    //Read the data into the file
 
     var fileName = dataToBeEncrypted.name;
 
-    reader.onload = function(e)
+    reader.onload = function(e)                 //After the data has been read
     {
       dataToBeEncrypted = reader.result;
 
+      var downloadableFile = new Blob([dataToBeEncrypted], {type: "application/octet-stream"}); //Store it in a blob
+
       console.log(typeof(dataToBeEncrypted) + "size: " + dataToBeEncrypted.length);
       console.log(dataToBeEncrypted);
-      aesEncrypt(fileName);
+      aesEncrypt(fileName);         //Send it to be encrypted
     }
   }
 
 
 
 
-
+  /*
+    Method for generating a server key
+    Parameter: encryptionKey: Password to be used as a seed (string)
+  */
   function generateServerKey(encryptionKey)
   {
     var firsthash = sjcl.hash.sha256.hash(encryptionKey);
-    //console.log("First Hash: " + firsthash[0].toString(16) + firsthash[1].toString(16) + firsthash[2].toString(16) + firsthash[3].toString(16) + firsthash[4].toString(16) + firsthash[5].toString(16) + firsthash[6].toString(16) + firsthash[7].toString(16));
     console.log("Server First Hash: " + sjcl.codec.hex.fromBits(firsthash));
     var cutkey = sjcl.codec.hex.fromBits(firsthash).substr(0,32);
     console.log("Server Cut Key: " + cutkey);
@@ -66,11 +69,13 @@ Send a second key to the connection to the steg server along with the rest of th
 
   }
 
+  /*
+    Method for generating a client key
+    Parameter: encryptionKey: Password to be used as a seed (string)
+  */
   function generateClientKey(encryptionKey)
   {
     var firsthash = sjcl.hash.sha256.hash(encryptionKey);
-    //console.log("First Hash: " + firsthash[0].toString(16) + firsthash[1].toString(16) + firsthash[2].toString(16) + firsthash[3].toString(16) + firsthash[4].toString(16) + firsthash[5].toString(16) + firsthash[6].toString(16) + firsthash[7].toString(16));
-    //console.log("First Hash: " + sjcl.codec.hex.fromBits(firsthash));
     var cutkey = sjcl.codec.hex.fromBits(firsthash).substr(32,32);
     console.log("Cut Key: " + cutkey);
 
@@ -91,7 +96,7 @@ Send a second key to the connection to the steg server along with the rest of th
 
   }
 
-  function generateRandom()
+  function generateRandom()   //Generate a random number between 0 and 255
   {
     var random = (Math.random() * 256);
 
@@ -101,17 +106,23 @@ Send a second key to the connection to the steg server along with the rest of th
 
   }
 
-  function aesEncrypt(encryptedFileName){
-
+  /*
+    Method for encrypting data that was saved when takeInput was called
+  */
+  function aesEncrypt(encryptedFileName)
+  {
+    //Generate the keys
   serverKey = generateServerKey(encryptionKey);
   clientKey = generateClientKey(encryptionKey);
-
+  //Generate the iv
   var iv = [generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(),generateRandom(), generateRandom(),generateRandom(), generateRandom()];
 
-  var textBytes = aesjs.utils.utf8.toBytes(dataToBeEncrypted);
+  var textBytes = new Uint8Array(dataToBeEncrypted);
+
 
   console.log("bytes type " + textBytes.constructor.name + " bytes size " + textBytes.length + " text size " + dataToBeEncrypted.length);
 
+  //Padding the input, input must be a multiple of 16 bytes
   while(textBytes.length % 16 != 0)
   {
     var tempBytes = new Uint8Array(textBytes.length + 1);
@@ -122,11 +133,11 @@ Send a second key to the connection to the steg server along with the rest of th
 
   }
 
-
+  //Encrypting the file with the key
   var aesCbc = new aesjs.ModeOfOperation.cbc(clientKey, iv);
   var encryptedFile = aesCbc.encrypt(textBytes);
-  //var encryptedHex = aesjs.util.hex.fromBytes(encryptedFile);
-  //alert(encryptedHex);
+
+  //Function for ensuring that the data can be stored in the image
   function checkValidImageFile(imageFile, encryptedData)
   {
     var form_data = new FormData();         //Inserts the image file into a data form so it can be processed by steg server
@@ -138,14 +149,14 @@ Send a second key to the connection to the steg server along with the rest of th
     console.log("extension " + imageextension + " file name " + imageFile.name);
 
 
-    if($.inArray(imageextension, ["png", "bmp", "jpg"]) == -1)
+    if($.inArray(imageextension, ["png", "bmp", "jpeg", "jpg"]) == -1)  //Checks for valid extension
     {
       alert("Not valid image file");
       return false;
     }
     var capacity = 0; //variable that stores the capacity of the image file
 
-    $.ajax(
+    $.ajax(   //Ajax call for the getcapacity php file, which gets the capacity of the image file
     {
     async:false,
     contentType:false,
@@ -155,29 +166,28 @@ Send a second key to the connection to the steg server along with the rest of th
     data: form_data,
     url:"php/getcapacity.php",
     success: function(data)
-      {
-        //console.log("testsetst");
+      {                   //If the ajax call ran successfully, capacity should be returned
         console.log(data);
         capacity = parseInt(data.substring(1, data.length - 1));
-        if(capacity > encryptedData.size)
+        if(capacity > encryptedData.size)  //If the image has enough capacity
         {
           alert("Image is large enough to hold encrypted data");
-          setTrue();
+          setTrue();                      //Allows the encryption to go on
         }
         else
-        {
-          alert("Image is too small to hold the file, capacity: " + capacity + " Size: " + encryptedData.size);
+        {                                 //Otherwise, alert the user this wont work out
+          changeView("Image is too small to hold the file, capacity: " + capacity + " Size: " + encryptedData.size);
           setFalse();
         }
       },
     error: function()
       {
-        console.log("Error using ima ge");
+        alert("Error using image");
         setFalse();
       }
     });
 
-    var returnValue;
+    var returnValue;        //If false is returned the image is not usable.
     function setTrue()
     {
       returnValue = true;
@@ -186,33 +196,26 @@ Send a second key to the connection to the steg server along with the rest of th
     {
       returnValue = false;
     }
-    alert("Value" + returnValue);
+    //alert("Value" + returnValue);
     return returnValue;
 
 
   }
-  var encryptedString = "";
-  for(var i = 0; i < encryptedFile.length; i++)
-  {
-    encryptedString = encryptedString + String.fromCharCode(encryptedFile[i]);
 
-  }
+  //var downloadableFile = new Blob([iv.concat(encryptedFile)], {type: "application/octet-stream"});
 
-  var stringIv = "";
-
-  for(var j =0; j < iv.length; j++)
-  {
-    stringIv = stringIv + String.fromCharCode(iv[j]);
-  }
-
-  //var encryptedString = aesjs.utils.utf8.fromBytes(encryptedFile);
-
-  //var stringIv = aesjs.utils.utf8.fromBytes(iv);
-
-  //var downloadableFile = new Blob([btoa(stringIv) + btoa(encryptedString)], {type: "text/plain;charset=utf-8"});
-  //saveAs(downloadableFile, encryptedFileName);
+  console.log(iv.concat(encryptedFile));
 
 
+  //Storing the encrypted data into a Blob
+  //12/3/2018: I realized that the reason it was being read in as a decimal string was because an ArrayBuffer was being stored
+  //If you convert it to a Uint8Array, a bunch of weird characters appear like theyre supposed
+  //I havent really had the time to test this out though
+  var downloadableFile = new Blob([Uint8Array.from(iv.concat(encryptedFile))], {type: "application/octet-stream"});
+  console.log(downloadableFile);
+  //saveAs(downloadableFile, "encryptedFile.txt");
+
+  //Send the encrypted data to be stored in an image file on the steg server
   if(checkValidImageFile(imageFile, downloadableFile) == true)
   {
     var form_data = new FormData();         //Inserts the image file into a data form so it can be processed by steg server
@@ -230,9 +233,9 @@ Send a second key to the connection to the steg server along with the rest of th
     url:"php/encryptdata.php?key=" + serverKey,
     success: function(data)
       {
-        alert(data);
+        //alert(data);
         console.log(data);
-        changeView(data.substring(1, data.length - 3))
+        changeView(data.substring(1, data.length - 3))      //Updates index.html
       },
     error: function()
       {
@@ -244,16 +247,6 @@ Send a second key to the connection to the steg server along with the rest of th
   {
     alert("You must insert a valid image file");
   }
-
-  var newAesCbc = new aesjs.ModeOfOperation.cbc(clientKey, iv);
-
-  //var encryptedBytes = new aesjs.utils.hex.toBytes(encryptedFile);
-  var decryptedBytes = newAesCbc.decrypt(encryptedFile);
-  alert("Decrypted bytes: " + decryptedBytes);
-
-  var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
-  alert("Decrypted text:" + decryptedText);
-
 
 
   return encryptedFile;

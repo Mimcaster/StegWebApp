@@ -17,9 +17,10 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);    //Passing in the post fiel
 
 $capacity = curl_exec($ch);
 
-  if($capacity === FALSE)   //Checks out if anything went wrong
+if($capacity === FALSE)   //Checks out if anything went wrong
 {
-  echo "Error: " + curl_error($ch);
+  echo $capacity;
+  echo "Error: " . curl_errno($ch);
 
 }
 else

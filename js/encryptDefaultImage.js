@@ -13,38 +13,43 @@ Send a second key to the connection to the steg server along with the rest of th
 
   console.log("hue" + typeof(dataToBeEncrypted));
 
-  alert("why wonttdts you work");
 
-
+  //If the data be encrypted is just text
   if(typeof(dataToBeEncrypted) == "string")
-  {
+  {   //convert text to bytes
+    dataToBeEncrypted = aesjs.utils.utf8.toBytes(dataToBeEncrypted);
+    //encrypt it
     aesEncrypt("cipherText.txt");
-  }
+  } //If the data being encrypted is a file
   else if(dataToBeEncrypted.constructor.name == "File")
   {
     var reader = new FileReader();
-    reader.readAsText(dataToBeEncrypted);
+    reader.readAsArrayBuffer(dataToBeEncrypted);    //Read from the file
 
-    var fileName = dataToBeEncrypted.name;
+    var fileName = dataToBeEncrypted.name;          //Save the file name. This was part of a potential feature that was not implemented or planned for
 
-    reader.onload = function(e)
+    reader.onload = function(e)                     //After the file has been fully read from
     {
       dataToBeEncrypted = reader.result;
+      console.log(dataToBeEncrypted);
+      var downloadableFile = new Blob([dataToBeEncrypted], {type: "application/octet-stream"}); //Save it into a blob
 
       console.log(typeof(dataToBeEncrypted) + "size: " + dataToBeEncrypted.length);
 
-      aesEncrypt(fileName);
+      aesEncrypt(fileName);                         //Encrypt it
     }
   }
 
 
 
 
-
+  /*
+    Method for generating a server key
+    Parameter: encryptionKey: Password to be used as a seed (string)
+  */
   function generateServerKey(encryptionKey)
   {
     var firsthash = sjcl.hash.sha256.hash(encryptionKey);
-    //console.log("First Hash: " + firsthash[0].toString(16) + firsthash[1].toString(16) + firsthash[2].toString(16) + firsthash[3].toString(16) + firsthash[4].toString(16) + firsthash[5].toString(16) + firsthash[6].toString(16) + firsthash[7].toString(16));
     console.log("Server First Hash: " + sjcl.codec.hex.fromBits(firsthash));
     var cutkey = sjcl.codec.hex.fromBits(firsthash).substr(0,32);
     console.log("Server Cut Key: " + cutkey);
@@ -66,11 +71,14 @@ Send a second key to the connection to the steg server along with the rest of th
 
   }
 
+
+  /*
+    Method for generating a client key
+    Parameter: encryptionKey: Password to be used as a seed (string)
+  */
   function generateClientKey(encryptionKey)
   {
     var firsthash = sjcl.hash.sha256.hash(encryptionKey);
-    //console.log("First Hash: " + firsthash[0].toString(16) + firsthash[1].toString(16) + firsthash[2].toString(16) + firsthash[3].toString(16) + firsthash[4].toString(16) + firsthash[5].toString(16) + firsthash[6].toString(16) + firsthash[7].toString(16));
-    //console.log("First Hash: " + sjcl.codec.hex.fromBits(firsthash));
     var cutkey = sjcl.codec.hex.fromBits(firsthash).substr(32,32);
     console.log("Cut Key: " + cutkey);
 
@@ -102,16 +110,23 @@ Send a second key to the connection to the steg server along with the rest of th
   }
 
   function aesEncrypt(encryptedFileName){
-
+    //Generates the keys
   serverKey = generateServerKey(encryptionKey);
   clientKey = generateClientKey(encryptionKey);
-
+  //Generates the iv
   var iv = [generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(), generateRandom(),generateRandom(), generateRandom(),generateRandom(), generateRandom()];
 
-  var textBytes = aesjs.utils.utf8.toBytes(dataToBeEncrypted);
+
+  console.log("Data to be encrypted " + dataToBeEncrypted);
+  console.log(dataToBeEncrypted);
+
+  var textBytes = new Uint8Array(dataToBeEncrypted);
+
+  console.log(textBytes);
 
   console.log("bytes type " + textBytes.constructor.name + " bytes size " + textBytes.length + " text size " + dataToBeEncrypted.length);
 
+  //Pads the input so that it can be encrypted
   while(textBytes.length % 16 != 0)
   {
     var tempBytes = new Uint8Array(textBytes.length + 1);
@@ -122,38 +137,21 @@ Send a second key to the connection to the steg server along with the rest of th
 
   }
 
-
+  //Encrypts the data
   var aesCbc = new aesjs.ModeOfOperation.cbc(clientKey, iv);
   var encryptedFile = aesCbc.encrypt(textBytes);
-  //var encryptedHex = aesjs.util.hex.fromBytes(encryptedFile);
-  //alert(encryptedHex);
 
-  var encryptedString = "";
-  for(var i = 0; i < encryptedFile.length; i++)
-  {
-    encryptedString = encryptedString + String.fromCharCode(encryptedFile[i]);
-
-  }
-
-  var stringIv = "";
-
-  for(var j =0; j < iv.length; j++)
-  {
-    stringIv = stringIv + String.fromCharCode(iv[j]);
-  }
-
-  //var encryptedString = aesjs.utils.utf8.fromBytes(encryptedFile);
-
-  //var stringIv = aesjs.utils.utf8.fromBytes(iv);
-
-  var downloadableFile = new Blob([btoa(stringIv) + btoa(encryptedString)], {type: "text/plain;charset=utf-8"});
-  saveAs(downloadableFile, encryptedFileName);
+  //12/3/2018: I realized that the reason it was being read in as a decimal string was because an ArrayBuffer was being stored
+  //If you convert it to a Uint8Array, a bunch of weird characters appear like theyre supposed
+  //I havent really had the time to test this out though
+  var downloadableFile = new Blob([Uint8Array.from(iv.concat(encryptedFile))], {type: "application/octet-stream"});
 
 
   var form_data = new FormData();         //Inserts the image file into a data form so it can be processed by steg server
-  //form_data.append("image", imageFile);
   form_data.append("content", downloadableFile);
 
+  //Ajax call for encrypting with a default image
+  //Takes the number of the default image and the server key and the encrypted file as input
   $.ajax(
   {
     async:false,
@@ -165,26 +163,14 @@ Send a second key to the connection to the steg server along with the rest of th
     url:"php/encryptDefaultImage.php?key=" + serverKey + "&default=" + defaultNum,
     success: function(data)
       {
-        alert(data);
         console.log(data);
-        changeView(data.substring(1, data.length - 3))
+        changeView(data.substring(1, data.length - 2))    //Updates index.html on success
       },
     error: function()
       {
         alert("Insert error");
       }
   });
-
-
-  var newAesCbc = new aesjs.ModeOfOperation.cbc(clientKey, iv);
-
-  //var encryptedBytes = new aesjs.utils.hex.toBytes(encryptedFile);
-  var decryptedBytes = newAesCbc.decrypt(encryptedFile);
-  alert("Decrypted bytes: " + decryptedBytes);
-
-  var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
-  alert("Decrypted text:" + decryptedText);
-
 
 
   return encryptedFile;

@@ -107,11 +107,16 @@
               {
                 alert("Using selected default image");
                 var encryptionKey = $("input[name='password']").val();
-                var file = document.getElementById("inputfile").files[0];
-                var text = $("input[name='inputText']").val();
+                //var file = document.getElementById("inputfile").files[0];
+                //var text = $("input[name='inputText']").val();
+
+                if($("input[name='inputText']").val().length > 0)
+                {
+                  file = $("input[name='inputText']").val();
+                }
 
                 //takeDefaultInput(file, encryptionKey)
-                takeDefaultInput(dataToBeEncrypted, encryptionKey)
+                takeDefaultInput(file, encryptionKey)
 
                 $("#EncryptionSubmissionView").hide();
                 $("#EncryptionImageView").hide();
@@ -239,6 +244,7 @@
     <script src="js/encryption.js"></script>
     <script src="js/encryptDefaultImage.js"></script>
     <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/b64-to-blob"></script>
 
     <script>
       function changeView(encryptedFileLink)
@@ -281,7 +287,7 @@
 
       function takeFileInput(imageFile, unencryptedData, encryptionKey)
       {
-        alert("using uploaded image file");
+        //alert("using uploaded image file");
         console.log("hue hue " + unencryptedData);
 
 
